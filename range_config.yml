@@ -1,12 +1,14 @@
 ---
 ludus:
+
+
   - vm_name: "{{ range_id }}-wazuh-server"
     hostname: "{{ range_id }}-wazuh"
     template: kali-x64-desktop-template
     vlan: 10
     ip_last_octet: 10
     ram_gb: 6
-    cpus: 4
+    cpus: 2
     linux: true
     testing:
       snapshot: false
@@ -20,7 +22,7 @@ ludus:
     vlan: 10
     ip_last_octet: 11
     ram_gb: 8
-    cpus: 4
+    cpus: 2
     linux: true
     testing:
       snapshot: false
@@ -40,6 +42,7 @@ ludus:
       snapshot: false
       block_internet: false
     roles:
+      - docker
       - cortex
 
   - vm_name: "{{ range_id }}-misp"
@@ -62,16 +65,18 @@ ludus:
     vlan: 10
     ip_last_octet: 14
     ram_gb: 8
-    cpus: 4
+    cpus: 2
     linux: true
     testing:
       snapshot: false
       block_internet: false
     roles:
+      - docker
       - name: shuffle
         depends_on:
           - vm_name: "{{ range_id }}-wazuh-server"
             role: wazuh_server
+
 
   - vm_name: "{{ range_id }}-dvwa"
     hostname: "{{ range_id }}-dvwa"
