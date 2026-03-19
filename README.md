@@ -4,14 +4,14 @@ Ansible roles and Ludus range config to deploy a full SOC lab environment automa
 
 ## What gets deployed
 
-| VM | Roles | VLAN | IP |
-|----|-------|------|----|
-| Wazuh server | `wazuh_server` | 10 | `.10` |
-| TheHive | `thehive` | 10 | `.11` |
-| Cortex | `docker` + `cortex` | 10 | `.12` |
-| MISP | `misp` | 10 | `.13` |
-| Shuffle | `docker` + `shuffle` | 10 | `.14` |
-| DVWA | `wazuh_agent` + `dvwa` | 20 | `.10` |
+| VM | Role | VLAN | IP |
+|----|------|------|----|
+| Wazuh server | SIEM / XDR | 10 | `.10` |
+| TheHive | Case management | 10 | `.11` |
+| Cortex | Analyzer / enrichment | 10 | `.12` |
+| MISP | Threat intelligence | 10 | `.13` |
+| Shuffle | SOAR | 10 | `.14` |
+| DVWA | Vulnerable target + Wazuh agent | 20 | `.10` |
 
 
 ---
