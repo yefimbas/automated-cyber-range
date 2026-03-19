@@ -12,7 +12,7 @@ ludus:
       snapshot: false
       block_internet: false
     roles:
-      - dmytro.wazuh_server
+      - wazuh_server
 
   - vm_name: "{{ range_id }}-thehive"
     hostname: "{{ range_id }}-thehive"
@@ -26,7 +26,7 @@ ludus:
       snapshot: false
       block_internet: false
     roles:
-      - dmytro.thehive
+      - thehive
 
   - vm_name: "{{ range_id }}-cortex"
     hostname: "{{ range_id }}-cortex"
@@ -40,7 +40,7 @@ ludus:
       snapshot: false
       block_internet: false
     roles:
-      - dmytro.cortex
+      - cortex
 
   - vm_name: "{{ range_id }}-misp"
     hostname: "{{ range_id }}-misp"
@@ -54,7 +54,7 @@ ludus:
       snapshot: false
       block_internet: false
     roles:
-      - dmytro.misp
+      - misp
 
   - vm_name: "{{ range_id }}-shuffle"
     hostname: "{{ range_id }}-shuffle"
@@ -68,10 +68,10 @@ ludus:
       snapshot: false
       block_internet: false
     roles:
-      - name: dmytro.shuffle
+      - name: shuffle
         depends_on:
           - vm_name: "{{ range_id }}-wazuh-server"
-            role: dmytro.wazuh_server
+            role: wazuh_server
 
   - vm_name: "{{ range_id }}-dvwa"
     hostname: "{{ range_id }}-dvwa"
@@ -85,14 +85,14 @@ ludus:
       snapshot: true
       block_internet: false
     roles:
-      - name: dmytro.wazuh_agent
+      - name: wazuh_agent
         depends_on:
           - vm_name: "{{ range_id }}-wazuh-server"
-            role: dmytro.wazuh_server
-      - name: dmytro.dvwa
+            role: wazuh_server
+      - name: dvwa
         depends_on:
           - vm_name: "{{ range_id }}-wazuh-server"
-            role: dmytro.wazuh_server
+            role: wazuh_server
     role_vars:
       wazuh_server_ip: "10.{{ range_id }}.10.10"
       wazuh_agent_name: "dvwa"
