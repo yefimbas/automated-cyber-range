@@ -1,0 +1,98 @@
+---
+ludus:
+  - vm_name: "{{ range_id }}-wazuh-server"
+    hostname: "{{ range_id }}-wazuh"
+    template: kali-x64-desktop-template
+    vlan: 10
+    ip_last_octet: 10
+    ram_gb: 6
+    cpus: 4
+    linux: true
+    testing:
+      snapshot: false
+      block_internet: false
+    roles:
+      - dmytro.wazuh_server
+
+  - vm_name: "{{ range_id }}-thehive"
+    hostname: "{{ range_id }}-thehive"
+    template: ubuntu-24.04-x64-server-template
+    vlan: 10
+    ip_last_octet: 11
+    ram_gb: 8
+    cpus: 4
+    linux: true
+    testing:
+      snapshot: false
+      block_internet: false
+    roles:
+      - dmytro.thehive
+
+  - vm_name: "{{ range_id }}-cortex"
+    hostname: "{{ range_id }}-cortex"
+    template: ubuntu-24.04-x64-server-template
+    vlan: 10
+    ip_last_octet: 12
+    ram_gb: 4
+    cpus: 2
+    linux: true
+    testing:
+      snapshot: false
+      block_internet: false
+    roles:
+      - dmytro.cortex
+
+  - vm_name: "{{ range_id }}-misp"
+    hostname: "{{ range_id }}-misp"
+    template: ubuntu-24.04-x64-server-template
+    vlan: 10
+    ip_last_octet: 13
+    ram_gb: 4
+    cpus: 2
+    linux: true
+    testing:
+      snapshot: false
+      block_internet: false
+    roles:
+      - dmytro.misp
+
+  - vm_name: "{{ range_id }}-shuffle"
+    hostname: "{{ range_id }}-shuffle"
+    template: ubuntu-24.04-x64-server-template
+    vlan: 10
+    ip_last_octet: 14
+    ram_gb: 8
+    cpus: 4
+    linux: true
+    testing:
+      snapshot: false
+      block_internet: false
+    roles:
+      - name: dmytro.shuffle
+        depends_on:
+          - vm_name: "{{ range_id }}-wazuh-server"
+            role: dmytro.wazuh_server
+
+  - vm_name: "{{ range_id }}-dvwa"
+    hostname: "{{ range_id }}-dvwa"
+    template: ubuntu-24.04-x64-server-template
+    vlan: 20
+    ip_last_octet: 10
+    ram_gb: 2
+    cpus: 2
+    linux: true
+    testing:
+      snapshot: true
+      block_internet: false
+    roles:
+      - name: dmytro.wazuh_agent
+        depends_on:
+          - vm_name: "{{ range_id }}-wazuh-server"
+            role: dmytro.wazuh_server
+      - name: dmytro.dvwa
+        depends_on:
+          - vm_name: "{{ range_id }}-wazuh-server"
+            role: dmytro.wazuh_server
+    role_vars:
+      wazuh_server_ip: "10.{{ range_id }}.10.10"
+      wazuh_agent_name: "dvwa"

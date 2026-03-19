@@ -1,0 +1,25 @@
+---
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - curl
+      - gnupg
+      - apt-transport-https
+      - wget
+      - python3-pexpect
+    state: present
+    update_cache: yes
+
+- name: Download Cortex installation script
+  ansible.builtin.get_url:
+    url: https://scripts.download.strangebee.com/latest/sh/install_script.sh
+    dest: /tmp/install_script.sh
+    mode: '0755'
+
+- name: Run Cortex installation script
+  ansible.builtin.expect:
+    command: /tmp/install_script.sh
+    responses:
+      '\[ASK\] Do you want to continue\? \[yes/NO\]': 'yes'
+      'Select an option:': '3'
+    timeout: 600

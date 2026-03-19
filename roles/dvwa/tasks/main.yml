@@ -1,0 +1,101 @@
+---
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - apache2
+      - mariadb-server
+      - php
+      - php-mysqli
+      - php-gd
+      - git
+      - python3-pymysql
+    state: present
+    update_cache: yes
+
+- name: Ensure MariaDB is running
+  ansible.builtin.service:
+    name: mariadb
+    state: started
+    enabled: true
+
+- name: Ensure Apache is running
+  ansible.builtin.service:
+    name: apache2
+    state: started
+    enabled: true
+
+- name: Clone DVWA repository
+  ansible.builtin.git:
+    repo: https://github.com/digininja/DVWA.git
+    dest: /var/www/html/dvwa
+    update: yes
+
+- name: Set DVWA directory permissions
+  ansible.builtin.file:
+    path: /var/www/html/dvwa
+    owner: www-data
+    group: www-data
+    mode: '0755'
+    recurse: yes
+
+- name: Copy DVWA config file
+  ansible.builtin.copy:
+    src: /var/www/html/dvwa/config/config.inc.php.dist
+    dest: /var/www/html/dvwa/config/config.inc.php
+    remote_src: yes
+    force: no
+
+- name: Create DVWA database
+  community.mysql.mysql_db:
+    name: dvwa
+    state: present
+    login_unix_socket: /run/mysqld/mysqld.sock
+
+- name: Create DVWA database user
+  community.mysql.mysql_user:
+    name: dvwa
+    password: p@ssw0rd
+    priv: "dvwa.*:ALL"
+    host: localhost
+    state: present
+    login_unix_socket: /run/mysqld/mysqld.sock
+
+- name: Find php.ini files
+  ansible.builtin.find:
+    paths: /etc/php
+    patterns: php.ini
+    recurse: yes
+  register: php_ini_files
+
+- name: Enable allow_url_include in php.ini
+  ansible.builtin.lineinfile:
+    path: "{{ php_ini_files.files[0].path }}"
+    regexp: '^allow_url_include'
+    line: "allow_url_include = On"
+
+- name: Restart Apache
+  ansible.builtin.service:
+    name: apache2
+    state: restarted
+
+- name: Add Apache logs to Wazuh agent config
+  ansible.builtin.blockinfile:
+    path: /var/ossec/etc/ossec.conf
+    insertbefore: "</ossec_config>"
+    block: |
+      <localfile>
+        <log_format>apache</log_format>
+        <location>/var/log/apache2/access.log</location>
+      </localfile>
+
+      <localfile>
+        <log_format>apache</log_format>
+        <location>/var/log/apache2/error.log</location>
+      </localfile>
+  register: wazuh_config
+
+- name: Restart Wazuh agent
+  ansible.builtin.service:
+    name: wazuh-agent
+    state: restarted
+  when: wazuh_config.changed

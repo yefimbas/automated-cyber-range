@@ -1,0 +1,16 @@
+---
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - wget
+    state: present
+    update_cache: yes
+
+- name: Download MISP installation script
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/MISP/MISP/refs/heads/2.5/INSTALL/INSTALL.ubuntu2404.sh
+    dest: /tmp/misp-install.sh
+    mode: '0755'
+
+- name: Run MISP installation script
+  ansible.builtin.command: bash /tmp/misp-install.sh

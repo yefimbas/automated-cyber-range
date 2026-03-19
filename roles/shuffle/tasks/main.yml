@@ -1,0 +1,32 @@
+---
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - git
+      - curl
+    state: present
+    update_cache: yes
+
+- name: Clone Shuffle repository
+  ansible.builtin.git:
+    repo: https://github.com/shuffle/Shuffle.git
+    dest: /opt/shuffle
+    version: main
+    update: yes
+
+- name: Start Shuffle via Docker Compose
+  ansible.builtin.shell: docker compose up -d
+  args:
+    chdir: /opt/shuffle
+
+- name: Fix Shuffle database directory permissions
+  ansible.builtin.file:
+    path: /opt/shuffle/shuffle-database
+    owner: '1000'
+    group: '1000'
+    recurse: yes
+
+- name: Restart Shuffle via Docker Compose
+  ansible.builtin.shell: docker compose restart
+  args:
+    chdir: /opt/shuffle

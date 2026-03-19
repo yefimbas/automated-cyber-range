@@ -1,0 +1,30 @@
+---
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - curl
+      - gnupg
+      - apt-transport-https
+    state: present
+    update_cache: yes
+
+- name: Download Wazuh installation script
+  ansible.builtin.get_url:
+    url: https://packages.wazuh.com/4.14/wazuh-install.sh
+    dest: /tmp/wazuh-install.sh
+    mode: '0755'
+
+- name: Run Wazuh installation assistant
+  ansible.builtin.command: bash /tmp/wazuh-install.sh -a
+
+- name: Ensure Wazuh manager is running
+  ansible.builtin.service:
+    name: wazuh-manager
+    state: started
+    enabled: true
+
+- name: Change admin password
+  ansible.builtin.command: >
+    bash /usr/share/wazuh-indexer/plugins/opensearch-security/tools/wazuh-passwords-tool.sh
+    -u admin -p {{ wazuh_admin_password }}
+  when: wazuh_admin_password is defined
