@@ -28,3 +28,20 @@
     bash /usr/share/wazuh-indexer/plugins/opensearch-security/tools/wazuh-passwords-tool.sh
     -u admin -p {{ wazuh_admin_password }}
   when: wazuh_admin_password is defined
+
+- name: Resolve MISP IP from inventory
+  ansible.builtin.set_fact:
+    misp_ip: >-
+      {{ hostvars[
+           groups['all']
+           | select('match', '.*misp.*')
+           | list
+           | first
+         ]['ansible_host'] }}
+
+- name: Add MISP to /etc/hosts
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    line: "{{ misp_ip }} misp.local"
+    regexp: '.*misp\.local.*'
+    state: present

@@ -1,4 +1,22 @@
 ---
+- name: Resolve Wazuh server IP from inventory
+  ansible.builtin.set_fact:
+    wazuh_server_ip: >-
+      {{ hostvars[
+           groups['all']
+           | select('match', '.*wazuh-server.*')
+           | list
+           | first
+         ]['ansible_host'] }}
+  when: wazuh_server_ip is not defined
+
+- name: Fail if Wazuh server IP could not be resolved
+  ansible.builtin.fail:
+    msg: >
+      Could not resolve wazuh_server_ip automatically.
+      Set it manually in role_vars: wazuh_server_ip: "10.x.10.10"
+  when: wazuh_server_ip is not defined
+
 - name: Install required packages
   ansible.builtin.apt:
     name:

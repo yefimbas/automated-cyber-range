@@ -99,5 +99,5 @@ ludus:
           - vm_name: "{{ range_id }}-wazuh-server"
             role: wazuh_server
     role_vars:
-      wazuh_server_ip: "10.{{ range_id }}.10.10"
+      wazuh_server_ip: "10.2.10.10"
       wazuh_agent_name: "dvwa"

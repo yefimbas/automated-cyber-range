@@ -1,44 +1,52 @@
 ---
-- name: Install required packages
-  ansible.builtin.apt:
-    name:
-      - curl
-      - gnupg
-      - apt-transport-https
-      - wget
-      - python3-pexpect
-    state: present
-    update_cache: yes
-
-- name: Ensure thehive user exists
-  ansible.builtin.user:
-    name: thehive
-    shell: /bin/bash
-    create_home: yes
-
-- name: Grant thehive user passwordless sudo
-  ansible.builtin.lineinfile:
-    path: /etc/sudoers.d/thehive
-    create: yes
-    line: 'thehive ALL=(ALL) NOPASSWD:ALL'
-    validate: 'visudo -cf %s'
-
-- name: Download TheHive installation script
-  ansible.builtin.get_url:
-    url: https://scripts.download.strangebee.com/latest/sh/install_script.sh
-    dest: /tmp/install_script.sh
+- name: Create required directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
     mode: '0755'
+  loop:
+    - /opt/cortex
+    - /var/run/cortex/jobs
+    - /opt/cortex/elasticsearch-data
 
-- name: Run TheHive installation script
-  ansible.builtin.expect:
-    command: sudo -u thehive /tmp/install_script.sh
-    responses:
-      '.*Do you want to continue\?.*': 'yes'
-      '.*Select an option:.*': '2'
-    timeout: 600
-  register: thehive_install_output
+- name: Set Elasticsearch data directory permissions
+  ansible.builtin.file:
+    path: /opt/cortex/elasticsearch-data
+    mode: '0777'
 
-- name: Save TheHive installation log
+- name: Deploy Cortex Docker Compose file
   ansible.builtin.copy:
-    content: "{{ thehive_install_output.stdout | join('\n') }}"
-    dest: /tmp/thehive_install.log
+    dest: /opt/cortex/docker-compose.yml
+    mode: '0644'
+    content: |
+      version: "2"
+      services:
+        elasticsearch:
+          image: docker.elastic.co/elasticsearch/elasticsearch:7.17.26
+          restart: unless-stopped
+          environment:
+            - http.host=0.0.0.0
+            - discovery.type=single-node
+            - script.allowed_types=inline
+            - thread_pool.search.queue_size=100000
+            - thread_pool.write.queue_size=10000
+            - xpack.security.enabled=false
+          volumes:
+            - /opt/cortex/elasticsearch-data:/usr/share/elasticsearch/data
+        cortex:
+          image: thehiveproject/cortex:3.1.7
+          restart: unless-stopped
+          environment:
+            - job_directory=/tmp/cortex-jobs
+          volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - /var/run/cortex/jobs:/tmp/cortex-jobs
+          depends_on:
+            - elasticsearch
+          ports:
+            - "0.0.0.0:9001:9001"
+
+- name: Start Cortex via Docker Compose
+  ansible.builtin.shell: docker compose up -d
+  args:
+    chdir: /opt/cortex
