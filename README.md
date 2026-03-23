@@ -78,7 +78,13 @@ ludus range logs -f
 ## Configuration
 
 ### Credentials
-The MISP admin password is generated during deployment and stored inside the VM at: /root/misp_settings.txt
+- Kali:
+kali:kali
+- Others:
+localuser:password
+- The MISP:
+Stored at: /root/misp_settings.txt
+
 
 ### Role variables
 
