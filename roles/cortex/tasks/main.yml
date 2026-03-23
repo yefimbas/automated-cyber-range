@@ -23,6 +23,7 @@
       services:
         elasticsearch:
           image: docker.elastic.co/elasticsearch/elasticsearch:7.17.26
+          restart: unless-stopped
           environment:
             - http.host=0.0.0.0
             - discovery.type=single-node
@@ -34,6 +35,7 @@
             - /opt/cortex/elasticsearch-data:/usr/share/elasticsearch/data
         cortex:
           image: thehiveproject/cortex:3.1.7
+          restart: unless-stopped
           environment:
             - job_directory=/tmp/cortex-jobs
           volumes:
@@ -44,7 +46,30 @@
           ports:
             - "0.0.0.0:9001:9001"
 
-- name: Start Cortex via Docker Compose
-  ansible.builtin.shell: docker compose up -d
-  args:
-    chdir: /opt/cortex
+- name: Deploy cortex systemd service
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/cortex.service
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Cortex
+      Requires=docker.service
+      After=docker.service
+
+      [Service]
+      Type=oneshot
+      RemainAfterExit=yes
+      WorkingDirectory=/opt/cortex
+      ExecStart=/usr/bin/docker compose up -d
+      ExecStop=/usr/bin/docker compose down
+      TimeoutStartSec=300
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Enable and start cortex service
+  ansible.builtin.systemd:
+    name: cortex
+    enabled: true
+    state: started
+    daemon_reload: yes
