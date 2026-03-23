@@ -77,6 +77,9 @@ ludus range logs -f
 
 ## Configuration
 
+### Credentials
+The MISP admin password is generated during deployment and stored inside the VM at: /root/misp_settings.txt
+
 ### Role variables
 
 | Variable | VM | Required | Description |
